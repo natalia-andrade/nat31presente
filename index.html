@@ -88,12 +88,22 @@ const money=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const href=b=>b.link||"https://www.amazon.com.br/s?k="+encodeURIComponent(b.t.split(":")[0]+" "+b.a.split(",")[0]);
 const BOW='<svg class="bow" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" d="M50 38C30 8 4 14 10 34c4 14 28 12 40 4zM50 38C70 8 96 14 90 34c-4 14-28 12-40 4zM46 42L34 66l12-6 4-16zM54 42l12 24-12-6-4-16z"/><circle cx="50" cy="38" r="7.5" fill="currentColor" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/></svg>';
 const ICO='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8C10 8 7.5 7 7.5 5.2c0-1.4 1.8-1.8 2.9-.8C11.3 5.2 12 8 12 8zm0 0c2 0 4.500-1 4.500-2.800 0-1.400-1.800-1.800-2.900-.8C12.700 5.200 12 8 12 8z"/></svg>';
-let store=new Set();try{store=new Set(JSON.parse(localStorage.getItem("livros-comprados")||"[]"))}catch(e){}
-const save=()=>{try{localStorage.setItem("livros-comprados",JSON.stringify([...store]))}catch(e){}};
+let store=new Set();
+const api="/api/book-purchase";
+const loadBooked=async()=>{
+  try{
+    const res=await fetch(api);
+    if(!res.ok)return;
+    const data=await res.json();
+    store=new Set(data.booked||[]);
+  }catch(e){}
+};
+const bookPurchase=key=>fetch(api,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bookKey:key})}).catch(()=>{});
+const cancelPurchase=key=>fetch(api,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({bookKey:key})}).catch(()=>{});
 const grid=document.getElementById("grid");
 document.getElementById("count").textContent=books.length+" livros para escolher";
 
-books.forEach((b,i)=>{
+loadBooked().then(()=>books.forEach((b,i)=>{
   const c=document.createElement("article");
   c.className="card";c.style.setProperty("--spine",spines[i%spines.length]);
   const h=document.createElement("h2");h.textContent=b.t;
@@ -133,12 +143,13 @@ books.forEach((b,i)=>{
     w.append(st,un);act.append(w);
   };
   const setDone=v=>{
-    v?store.add(b.t):store.delete(b.t);save();
+    v?store.add(b.t):store.delete(b.t);
+    v?bookPurchase(b.t):cancelPurchase(b.t);
     c.classList.toggle("done",v);
     v?showDone():start();
   };
   if(store.has(b.t)){c.classList.add("done");showDone()}else start();
-});
+}));
 function mk(tag,cls,txt){const e=document.createElement(tag);e.className=cls;e.textContent=txt;if(tag==="button")e.type="button";return e}
 </script>
 </body>
