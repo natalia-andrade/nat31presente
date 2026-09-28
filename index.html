@@ -128,10 +128,27 @@ loadBooked().then(()=>books.forEach((b,i)=>{
     const q=document.createElement("p");q.className="q";q.textContent="tem certeza de que vai comprar esse livro?";
     const opts=document.createElement("div");opts.className="opts";
     const yes=mk("a","btn","vou comprar sim, será meu presente!");
-    yes.href=href(b);yes.target="_blank";yes.rel="noopener noreferrer";yes.onclick=()=>setTimeout(()=>setDone(true),0);
+    yes.href=href(b);yes.target="_blank";yes.rel="noopener noreferrer";
+    yes.onclick=(e)=>{
+      e.preventDefault();
+      if(yes.getAttribute("aria-disabled")==="true")return;
+      yes.setAttribute("aria-disabled","true");
+      const dest=yes.href;
+      loadBooked().then(()=>{
+        if(store.has(b.t)){showTaken()}
+        else{window.open(dest,"_blank","noopener,noreferrer");setDone(true)}
+      });
+    };
     const no=mk("button","btn alt","não vou dar esse presente");
     no.onclick=()=>{start();act.querySelector("button").focus()};
     opts.append(yes,no);box.append(q,opts);act.append(box);yes.focus();
+  };
+  const showTaken=()=>{
+    act.replaceChildren();
+    c.classList.add("done");
+    const w=document.createElement("div");w.className="bought";
+    const st=document.createElement("strong");st.textContent="alguém já comprou este presente!";
+    w.append(st);act.append(w);
   };
   const showDone=()=>{
     act.replaceChildren();
