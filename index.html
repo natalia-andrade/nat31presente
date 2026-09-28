@@ -155,7 +155,7 @@ loadBooked().then(()=>books.forEach((b,i)=>{
     const w=document.createElement("div");w.className="bought";
     w.insertAdjacentHTML("beforeend",ICO);
     const st=document.createElement("strong");st.textContent="comprado!";
-    const un=mk("button","undo","desfazer");
+    const un=mk("button","undo","descomprar");
     un.onclick=()=>setDone(false);
     w.append(st,un);act.append(w);
   };
